@@ -7,14 +7,19 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.assembler.UserAssembler;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.response.dto.UserResponseDto;
+import com.example.demo.service.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -22,20 +27,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @RequestMapping(value = "/search")
 public class ManageUser {
 
-	private UserRepository userRepository;
-
 	@Autowired
-	public void setUserRepository(UserRepository userRepository) {
-		this.userRepository = userRepository;
-	}
-
+	private UserRepository userRepository;
+	
+	@Autowired
+	private UserAssembler userAssembler;
+	
+	@Autowired
+	private UserService userService;
+	
 	@RequestMapping(value = "/name",method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE })
-	public String searchUserByName(@RequestParam("name") String name) throws JsonProcessingException {
-		List<User> users = userRepository.findByName(name);
-		ObjectMapper mapper = new ObjectMapper();
-	    String jsonInString = null;
-	    jsonInString = mapper.writeValueAsString(users);
-		return jsonInString;
+	public ResponseEntity<UserResponseDto> searchUserByName(@RequestParam("name") String name) throws JsonProcessingException {
+		List<User> users = userService.getUsersByName(name);
+		UserResponseDto response = userAssembler.toModel(users);
+		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
 	@RequestMapping(value = "/id",method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE })
